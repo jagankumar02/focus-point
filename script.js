@@ -1,57 +1,58 @@
-let peer = new Peer(); 
+// PeerJS initialize
+const peer = new Peer(); 
 let conn = null;
 let points = 0;
 let seconds = 1500;
 let timerId = null;
 
-// Jab aapka Peer ID taiyar ho jaye
+// 1. Peer ID Generate Hona
 peer.on('open', (id) => {
     document.getElementById('my-id').innerText = id;
-    console.log('My Peer ID: ' + id);
+    console.log("Your ID:", id);
 });
 
-// Dusre peer se connection receive karna
-peer.on('connection', (connection) => {
-    conn = connection;
-    console.log("Buddy connected to me!");
+// 2. Incoming Connection Handle Karna (Receiver Side)
+peer.on('connection', (incomingConn) => {
+    conn = incomingConn;
     setupConnection();
+    console.log("Buddy connected to you!");
 });
 
-// Khud se connect karna
+// 3. Connection Start Karna (Sender Side)
 function connectToPeer() {
-    const remoteId = document.getElementById('remotePeerId').value;
-    if (!remoteId) return alert("Pehle ID toh daalo!");
+    const remoteId = document.getElementById('remotePeerId').value.trim();
+    if (!remoteId) return alert("Pehle Buddy ki ID daalein!");
     
+    updateBuddyStatus("Connecting...");
     conn = peer.connect(remoteId);
-    console.log("Connecting to: " + remoteId);
     setupConnection();
 }
 
-// Common function for both sides
+// 4. Sabhi Events ko Setup Karna
 function setupConnection() {
+    // Jab connection poori tarah khul jaye
     conn.on('open', () => {
-        console.log("Connection fully OPEN!");
         updateBuddyStatus("Buddy is Online 🟢");
+        console.log("Connected successfully!");
         
-        // Listen for messages
+        // Listen for data
         conn.on('data', (data) => {
-            console.log("Data received:", data);
             if (data.type === 'chat') {
                 appendMessage(data.msg, 'buddy');
             } else if (data.type === 'status') {
-                handleStatusChange(data.msg);
+                document.getElementById('sessionStatus').innerText = data.msg;
             }
         });
     });
 
     conn.on('close', () => {
-        updateBuddyStatus("Connection Lost 🔴");
+        updateBuddyStatus("Disconnected 🔴");
         conn = null;
     });
 
     conn.on('error', (err) => {
         console.error("Peer Error:", err);
-        alert("Connection Error!");
+        updateBuddyStatus("Connection Error ❌");
     });
 }
 
@@ -60,23 +61,21 @@ function sendMessage() {
     const input = document.getElementById('chatInput');
     const msg = input.value.trim();
 
-    if (!conn || !conn.open) {
-        alert("Buddy connected nahi hai! Pehle ID se connect karein.");
-        return;
-    }
-
-    if (msg) {
+    if (conn && conn.open) {
         conn.send({ type: 'chat', msg: msg });
         appendMessage(msg, 'me');
         input.value = '';
+    } else {
+        alert("Buddy connected nahi hai! Pehle ID connect karein.");
     }
 }
 
-// ENTER key se message send karne ke liye
+// Enter Key Support
 document.getElementById('chatInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
+// UI Functions
 function appendMessage(msg, sender) {
     const chatDiv = document.getElementById('chatMessages');
     const msgEl = document.createElement('div');
@@ -86,61 +85,6 @@ function appendMessage(msg, sender) {
     chatDiv.scrollTop = chatDiv.scrollHeight;
 }
 
-// Status handling
-function handleStatusChange(statusMsg) {
-    document.getElementById('sessionStatus').innerText = statusMsg;
-    if (statusMsg.includes("Distracted")) {
-        document.getElementById('timer').classList.add('distracted-mode');
-    } else {
-        document.getElementById('timer').classList.remove('distracted-mode');
-    }
-}
-
-// Visibility API (Tab Change Detect)
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        if (conn && conn.open) conn.send({ type: 'status', msg: "Buddy is Distracted! 🛑" });
-        stopTimer();
-    } else {
-        if (conn && conn.open) conn.send({ type: 'status', msg: "Buddy is back ✍️" });
-    }
-});
-
-// Timer functions
-function toggleTimer() {
-    if (timerId) {
-        stopTimer();
-        document.getElementById('startBtn').innerText = "Resume Session";
-    } else {
-        startTimer();
-        document.getElementById('startBtn').innerText = "Pause Session";
-    }
-}
-
-function startTimer() {
-    if (!timerId) {
-        timerId = setInterval(() => {
-            if (seconds > 0) {
-                seconds--;
-                points += 1;
-                updateDisplay();
-            }
-        }, 1000);
-    }
-}
-
-function stopTimer() {
-    clearInterval(timerId);
-    timerId = null;
-}
-
-function updateDisplay() {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' + s : s}`;
-    document.getElementById('points').innerText = points;
-}
-
 function updateBuddyStatus(status) {
     document.getElementById('buddyStatus').innerText = status;
 }
@@ -148,4 +92,24 @@ function updateBuddyStatus(status) {
 function copyID() {
     const id = document.getElementById('my-id').innerText;
     navigator.clipboard.writeText(id).then(() => alert("ID Copied!"));
+}
+
+// Responsive Toggles
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+function toggleChat() { document.getElementById('chatSidebar').classList.toggle('active'); }
+
+// Timer Logic (Pichle code wala hi hai)
+function toggleTimer() {
+    if (timerId) { clearInterval(timerId); timerId = null; document.getElementById('startBtn').innerText = "Resume Session"; }
+    else { startTimer(); document.getElementById('startBtn').innerText = "Pause Session"; }
+}
+function startTimer() {
+    timerId = setInterval(() => {
+        if(seconds > 0) { seconds--; points++; updateDisplay(); }
+    }, 1000);
+}
+function updateDisplay() {
+    const m = Math.floor(seconds / 60); const s = seconds % 60;
+    document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+    document.getElementById('points').innerText = points;
 }
