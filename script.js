@@ -1,56 +1,81 @@
-let peer = new Peer();
+let peer = new Peer(); 
 let conn = null;
 let points = 0;
 let seconds = 1500;
 let timerId = null;
 
+// Jab aapka Peer ID taiyar ho jaye
 peer.on('open', (id) => {
     document.getElementById('my-id').innerText = id;
+    console.log('My Peer ID: ' + id);
 });
 
-// Incoming Connection
+// Dusre peer se connection receive karna
 peer.on('connection', (connection) => {
     conn = connection;
-    handleData();
-    updateBuddyStatus("Buddy Connected ✅");
+    console.log("Buddy connected to me!");
+    setupConnection();
 });
 
+// Khud se connect karna
 function connectToPeer() {
     const remoteId = document.getElementById('remotePeerId').value;
+    if (!remoteId) return alert("Pehle ID toh daalo!");
+    
     conn = peer.connect(remoteId);
-    handleData();
-    updateBuddyStatus("Connecting...");
+    console.log("Connecting to: " + remoteId);
+    setupConnection();
 }
 
-function handleData() {
+// Common function for both sides
+function setupConnection() {
     conn.on('open', () => {
+        console.log("Connection fully OPEN!");
         updateBuddyStatus("Buddy is Online 🟢");
         
+        // Listen for messages
         conn.on('data', (data) => {
+            console.log("Data received:", data);
             if (data.type === 'chat') {
                 appendMessage(data.msg, 'buddy');
             } else if (data.type === 'status') {
-                document.getElementById('sessionStatus').innerText = data.msg;
-                if(data.msg.includes("Distracted")) {
-                    document.getElementById('timer').classList.add('distracted-mode');
-                } else {
-                    document.getElementById('timer').classList.remove('distracted-mode');
-                }
+                handleStatusChange(data.msg);
             }
         });
     });
+
+    conn.on('close', () => {
+        updateBuddyStatus("Connection Lost 🔴");
+        conn = null;
+    });
+
+    conn.on('error', (err) => {
+        console.error("Peer Error:", err);
+        alert("Connection Error!");
+    });
 }
 
-// Chat Functions
+// Messaging Logic
 function sendMessage() {
     const input = document.getElementById('chatInput');
-    const msg = input.value;
-    if (msg && conn) {
+    const msg = input.value.trim();
+
+    if (!conn || !conn.open) {
+        alert("Buddy connected nahi hai! Pehle ID se connect karein.");
+        return;
+    }
+
+    if (msg) {
         conn.send({ type: 'chat', msg: msg });
         appendMessage(msg, 'me');
         input.value = '';
     }
 }
+
+// ENTER key se message send karne ke liye
+document.getElementById('chatInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
 
 function appendMessage(msg, sender) {
     const chatDiv = document.getElementById('chatMessages');
@@ -61,16 +86,27 @@ function appendMessage(msg, sender) {
     chatDiv.scrollTop = chatDiv.scrollHeight;
 }
 
-// Visibility API
+// Status handling
+function handleStatusChange(statusMsg) {
+    document.getElementById('sessionStatus').innerText = statusMsg;
+    if (statusMsg.includes("Distracted")) {
+        document.getElementById('timer').classList.add('distracted-mode');
+    } else {
+        document.getElementById('timer').classList.remove('distracted-mode');
+    }
+}
+
+// Visibility API (Tab Change Detect)
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-        if(conn) conn.send({ type: 'status', msg: "Buddy is Distracted! 🛑" });
+        if (conn && conn.open) conn.send({ type: 'status', msg: "Buddy is Distracted! 🛑" });
         stopTimer();
     } else {
-        if(conn) conn.send({ type: 'status', msg: "Buddy is back ✍️" });
+        if (conn && conn.open) conn.send({ type: 'status', msg: "Buddy is back ✍️" });
     }
 });
 
+// Timer functions
 function toggleTimer() {
     if (timerId) {
         stopTimer();
@@ -82,11 +118,15 @@ function toggleTimer() {
 }
 
 function startTimer() {
-    timerId = setInterval(() => {
-        seconds--;
-        points += 2;
-        updateDisplay();
-    }, 1000);
+    if (!timerId) {
+        timerId = setInterval(() => {
+            if (seconds > 0) {
+                seconds--;
+                points += 1;
+                updateDisplay();
+            }
+        }, 1000);
+    }
 }
 
 function stopTimer() {
@@ -97,7 +137,7 @@ function stopTimer() {
 function updateDisplay() {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+    document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' + s : s}`;
     document.getElementById('points').innerText = points;
 }
 
@@ -107,6 +147,5 @@ function updateBuddyStatus(status) {
 
 function copyID() {
     const id = document.getElementById('my-id').innerText;
-    navigator.clipboard.writeText(id);
-    alert("ID Copied!");
+    navigator.clipboard.writeText(id).then(() => alert("ID Copied!"));
 }
