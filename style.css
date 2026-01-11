@@ -1,0 +1,39 @@
+:root {
+    --bg: #0d1117;
+    --sidebar: #161b22;
+    --primary: #5865f2;
+    --accent: #2ecc71;
+    --danger: #f85149;
+    --text: #c9d1d9;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+
+.app-layout { display: grid; grid-template-columns: 260px 1fr 300px; height: 100vh; }
+
+/* Sidebar */
+.sidebar { background: var(--sidebar); border-right: 1px solid #30363d; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+.logo { font-weight: 800; font-size: 1.2rem; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+.my-id-card { background: #0d1117; padding: 12px; border-radius: 10px; border: 1px solid #30363d; }
+.id-row { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; font-family: monospace; color: var(--accent); }
+
+/* Timer Area */
+.focus-area { display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1c2128 0%, #0d1117 100%); position: relative; }
+.timer-container { text-align: center; }
+#timer { font-size: 8rem; font-weight: 800; letter-spacing: -2px; }
+.btn-glow { background: var(--primary); color: white; border: none; padding: 16px 40px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s; box-shadow: 0 0 20px rgba(88, 101, 242, 0.4); }
+.btn-glow:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(88, 101, 242, 0.6); }
+
+/* Chat Box */
+.chat-sidebar { background: var(--sidebar); border-left: 1px solid #30363d; display: flex; flex-direction: column; }
+.chat-header { padding: 20px; font-weight: 600; border-bottom: 1px solid #30363d; }
+.chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; }
+.msg { background: #21262d; padding: 10px; border-radius: 8px; align-self: flex-start; max-width: 80%; }
+.msg.me { background: var(--primary); align-self: flex-end; }
+.chat-input-area { padding: 15px; display: flex; gap: 8px; border-top: 1px solid #30363d; }
+.chat-input-area input { flex: 1; background: #0d1117; border: 1px solid #30363d; padding: 10px; border-radius: 8px; color: white; }
+
+.vibe-monitor { position: absolute; top: 20px; padding: 10px 20px; border-radius: 20px; background: rgba(255,255,255,0.05); }
+.distracted-mode { color: var(--danger); animation: pulse 1s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }

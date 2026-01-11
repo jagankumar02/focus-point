@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusHub Pro | P2P Study</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-bullseye"></i> <span>FocusHub</span>
+            </div>
+            <div class="my-id-card">
+                <small>Your ID</small>
+                <div class="id-row">
+                    <span id="my-id">Generating...</span>
+                    <button onclick="copyID()"><i class="far fa-copy"></i></button>
+                </div>
+            </div>
+            <div class="connect-box">
+                <input type="text" id="remotePeerId" placeholder="Buddy ID...">
+                <button onclick="connectToPeer()" class="btn-primary">Connect</button>
+            </div>
+            <div class="status-list">
+                <h3>Buddies Online</h3>
+                <div id="buddyStatus" class="buddy-status">Wait for connection...</div>
+            </div>
+        </aside>
+
+        <main class="focus-area">
+            <div class="vibe-monitor" id="vibeCard">
+                <span id="sessionStatus">Session: Idle</span>
+            </div>
+            
+            <div class="timer-container">
+                <div class="circle-svg">
+                    <h1 id="timer">25:00</h1>
+                </div>
+                <div class="points-badge">
+                    <i class="fas fa-bolt"></i> <span id="points">0</span> Focus Points
+                </div>
+            </div>
+
+            <div class="timer-controls">
+                <button onclick="toggleTimer()" id="startBtn" class="btn-glow">Start Focus Session</button>
+            </div>
+        </main>
+
+        <section class="chat-sidebar">
+            <div class="chat-header">Study Chat</div>
+            <div id="chatMessages" class="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type a message...">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
